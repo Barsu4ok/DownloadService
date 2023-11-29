@@ -7,14 +7,15 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         //services.AddHostedService<Worker>();
         services.AddScheduler();
-        services.AddTransient<ProcessOrder>();
+        //services.AddTransient<ProcessOrder>();
+        services.AddTransient<DownloadAndParseFileService>();
     })
     .Build();
 
 host.Services.UseScheduler(scheduler =>
 {
-    var jobSchedule = scheduler.Schedule<ProcessOrder>();
-    jobSchedule.EverySeconds(5);
+    var downloadSchedule = scheduler.Schedule<DownloadAndParseFileService>();
+    downloadSchedule.EveryMinute();
 });
 
 
