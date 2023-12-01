@@ -26,6 +26,9 @@ namespace DownloadService.Services
                  * ',' is used as a delimiter for the source string
                  * The values at the 1,5,7,8 positions are extracted from the source string:
                  * first - Type of communication,
+                 * second - Mobile country code,
+                 * third - Mobile network cod,
+                 * fourth - Location Area Code,
                  * fifth - Cell tower ID,
                  * seventh - longitude,
                  * eighth - latitude
@@ -44,7 +47,7 @@ namespace DownloadService.Services
                             if (str[i] == ',')
                             {
                                 count++;
-                                if (count == 1 || count == 5 || count == 7 || count == 8)
+                                if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
                                 {
                                     extracted = str.Slice(startIndex, i - startIndex);
                                     writer.Write(extracted);

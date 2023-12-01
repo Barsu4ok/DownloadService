@@ -5,9 +5,7 @@ using Coravel.Scheduling.Schedule;
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
-        //services.AddHostedService<Worker>();
         services.AddScheduler();
-        //services.AddTransient<ProcessOrder>();
         services.AddTransient<DownloadAndParseFileService>();
     })
     .Build();
@@ -15,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 host.Services.UseScheduler(scheduler =>
 {
     var downloadSchedule = scheduler.Schedule<DownloadAndParseFileService>();
-    downloadSchedule.EveryMinute();
+    downloadSchedule.DailyAtHour(0);
 });
 
 
