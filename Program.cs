@@ -13,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 host.Services.UseScheduler(scheduler =>
 {
     var downloadSchedule = scheduler.Schedule<DownloadAndParseFileService>();
-    downloadSchedule.DailyAtHour(0);
+    downloadSchedule.Weekly();
 });
 
 
