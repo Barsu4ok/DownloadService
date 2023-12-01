@@ -33,7 +33,7 @@ namespace DownloadService.Services
                  * seventh - longitude,
                  * eighth - latitude
                  * Output string format:
-                 * "GSM,55722,29.478378,54.703674,"
+                 * "GSM,257,2,84,55722,29.478378,54.703674,"
                  * ',' is used as a delimiter
                  */
                 while ((str = reader.ReadLine()) != null)
