@@ -11,17 +11,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DownloadService
 {
-    class DownloadAndParseFileService : IInvocable
+    class DownloadAndParseFileService : BackgroundService
     {
-        private Parser parser;
-        private string outputPath = "D:\\Learning\\DownloadService\\DownloadFiles\\result.txt";
-        private string uri = "https://drive.google.com/uc?export=download&id=1ZQBgouAZ5pfHkleQLNRKquTxrQqDDiN7";
-        private readonly ILogger<ProcessOrder> logger;
-        public DownloadAndParseFileService(ILogger<ProcessOrder> logger)
+        private readonly ILogger<DownloadAndParseFileService> logger;
+        private readonly TimeSpan period = TimeSpan.FromDays(7);
+        private Parser? parser;
+        private readonly string outputPath = "D:\\Learning\\DownloadService\\DownloadFiles\\result.txt";
+        private readonly string uri = "https://drive.google.com/uc?export=download&id=1ZQBgouAZ5pfHkleQLNRKquTxrQqDDiN7";
+        public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger)
         {
             var services = new ServiceCollection()
                 .AddTransient<IParseService, CellTowerParseService>()
-                .AddTransient<IDownloadService, DownloadFileService>()
                 .AddTransient<Parser>();
             using var serviceProvider = services.BuildServiceProvider();
             parser = serviceProvider.GetService<Parser>();
@@ -29,12 +29,25 @@ namespace DownloadService
 
         }
 
-        public Task Invoke()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            logger.LogInformation("Starting the process of downloading and parsing the file");
-            parser.parseFile(uri,outputPath);
-            logger.LogInformation("Finishing the process of downloading and parsing the file");
-            return Task.FromResult(true);
+            using PeriodicTimer timer = new PeriodicTimer(period);
+            while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                try
+                {
+                 if(parser != null)
+                 {
+                  parser.parseFile(uri, outputPath);
+                  logger.LogInformation("Success download and parse file");
+                 }   
+                }
+                catch(Exception ex)
+                {
+                    logger.LogInformation($"Failed download and parse file! Description ERROR: {ex.Message}");
+                }
+            }
+    
         }
     }
 }

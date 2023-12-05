@@ -8,6 +8,6 @@ namespace DownloadService.Services.Interfaces
 {
     interface IParseService
     {
-        public void parse(HttpResponseMessage response, string outputPath);
+        public void parse(String uri, string outputPath);
     }
 }

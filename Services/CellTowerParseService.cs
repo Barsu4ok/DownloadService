@@ -9,8 +9,11 @@ namespace DownloadService.Services
 {
     public class CellTowerParseService : IParseService
     {
-        public void parse(HttpResponseMessage response, string outputPath)
+        public void parse(String uri, string outputPath)
         {
+            using HttpClient httpClient = new HttpClient();
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            HttpResponseMessage response = httpClient.Send(request);
             if (response.IsSuccessStatusCode)
             {
                 using Stream dataStream = response.Content.ReadAsStream();

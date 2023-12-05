@@ -12,18 +12,14 @@ namespace DownloadService
     class Parser
     {
         private IParseService cellTowerParseService;
-        private IDownloadService downloadService;
-
-
-        public Parser(IParseService parseService, IDownloadService downloadService)
+        public Parser(IParseService parseService)
         {
             this.cellTowerParseService = parseService;
-            this.downloadService = downloadService;
         }
 
         public void parseFile(string uri, string outputPath)
         {
-            cellTowerParseService.parse(downloadService.download(uri), outputPath);
+            cellTowerParseService.parse(uri, outputPath);
         }
     }
 }
