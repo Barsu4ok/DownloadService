@@ -11,6 +11,7 @@
     <PackageReference Include="Coravel" Version="5.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

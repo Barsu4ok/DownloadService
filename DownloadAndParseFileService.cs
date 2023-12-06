@@ -8,25 +8,23 @@ using Coravel.Invocable;
 using DownloadService.Services.Interfaces;
 using DownloadService.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using DownloadService.Config;
 
 namespace DownloadService
 {
     class DownloadAndParseFileService : BackgroundService
     {
+        private readonly DownloadConfig _configuration;
         private readonly ILogger<DownloadAndParseFileService> logger;
-        private readonly TimeSpan period = TimeSpan.FromDays(7);
+        private readonly TimeSpan period = TimeSpan.FromSeconds(2);
         private Parser? parser;
-        private readonly string outputPath = "D:\\Learning\\DownloadService\\DownloadFiles\\result.txt";
-        private readonly string uri = "https://drive.google.com/uc?export=download&id=1ZQBgouAZ5pfHkleQLNRKquTxrQqDDiN7";
-        public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger)
+        public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger,
+            Parser? parser,IOptions<DownloadConfig> configuration)
         {
-            var services = new ServiceCollection()
-                .AddTransient<IParseService, CellTowerParseService>()
-                .AddTransient<Parser>();
-            using var serviceProvider = services.BuildServiceProvider();
-            parser = serviceProvider.GetService<Parser>();
+            this.parser = parser;
             this.logger = logger;
-
+            _configuration = configuration.Value;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,11 +34,8 @@ namespace DownloadService
             {
                 try
                 {
-                 if(parser != null)
-                 {
-                  parser.parseFile(uri, outputPath);
-                  logger.LogInformation("Success download and parse file");
-                 }   
+                    parser.parseFile(_configuration.uri, _configuration.outputPath);
+                    logger.LogInformation("Success download and parse file");   
                 }
                 catch(Exception ex)
                 {

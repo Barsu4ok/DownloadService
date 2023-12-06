@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DownloadService.Services
 {
-    public class CellTowerParseService : IParseService
+    public class CellTowerParseService : IParseService, IDownload
     {
         public void parse(String uri, string outputPath)
         {
