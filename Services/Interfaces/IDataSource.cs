@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace DownloadService.Services.Interfaces
 {
-    public interface IDownload
+    public interface IDataSource
     {
-        public Stream download(String uri);
+        public Stream getDataSource(String path);
     }
 }

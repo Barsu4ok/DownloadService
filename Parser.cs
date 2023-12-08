@@ -6,20 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Coravel;
 using Coravel.Invocable;
+using DownloadService.Models;
 
 namespace DownloadService
 {
     class Parser
     {
-        private IParseService cellTowerParseService;
+        private IParseService _cellTowerParseService;
         public Parser(IParseService parseService)
         {
-            this.cellTowerParseService = parseService;
+            _cellTowerParseService = parseService;
         }
 
-        public void parseFile(string uri, string outputPath)
+        public IEnumerable<CellInfo> parseFile(Stream dataStream)
         {
-            cellTowerParseService.parse(uri, outputPath);
+            return _cellTowerParseService.parse(dataStream);
         }
     }
 }

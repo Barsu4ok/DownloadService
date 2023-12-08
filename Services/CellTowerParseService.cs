@@ -1,4 +1,5 @@
-﻿using DownloadService.Services.Interfaces;
+﻿using DownloadService.Models;
+using DownloadService.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,66 +8,77 @@ using System.Threading.Tasks;
 
 namespace DownloadService.Services
 {
-    public class CellTowerParseService : IParseService, IDownload
+    public class CellTowerParseService : IParseService
     {
-        public void parse(String uri, string outputPath)
+        public IEnumerable<CellInfo> parse(Stream data)
         {
-            using HttpClient httpClient = new HttpClient();
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
-            HttpResponseMessage response = httpClient.Send(request);
-            if (response.IsSuccessStatusCode)
+            using StreamReader reader = new StreamReader(data);
+            ReadOnlySpan<char> str;
+            ReadOnlySpan<char> extracted;
+            CellInfo info = new CellInfo();
+            int count = 0;
+            int startIndex = 0;
+            /*
+                * The source line in the file is represented in the following format:
+                * "GSM,257,2,84,55722,0,29.478378,54.703674,1000,2,1,1459770590,1459770590,0"
+                * ',' is used as a delimiter for the source string
+                * The values at the 1,5,7,8 positions are extracted from the source string:
+                * first - Type of communication,
+                * second - Mobile country code,
+                * third - Mobile network code,
+                * fourth - Location Area Code,
+                * fifth - Cell tower ID,
+                * seventh - longitude,
+                * eighth - latitude
+                * Output string format:
+                * "GSM,257,2,84,55722,29.478378,54.703674,"
+                * ',' is used as a delimiter
+                */
+            while ((str = reader.ReadLine()) != null)
             {
-                using Stream dataStream = response.Content.ReadAsStream();
-                using StreamReader reader = new StreamReader(dataStream);
-                using StreamWriter writer = new StreamWriter(outputPath, false);
-                ReadOnlySpan<char> str;
-                ReadOnlySpan<char> extracted;
-                int count = 0;
-                int startIndex = 0;
-                /*
-                 * The source line in the file is represented in the following format:
-                 * "GSM,257,2,84,55722,0,29.478378,54.703674,1000,2,1,1459770590,1459770590,0"
-                 * ',' is used as a delimiter for the source string
-                 * The values at the 1,5,7,8 positions are extracted from the source string:
-                 * first - Type of communication,
-                 * second - Mobile country code,
-                 * third - Mobile network cod,
-                 * fourth - Location Area Code,
-                 * fifth - Cell tower ID,
-                 * seventh - longitude,
-                 * eighth - latitude
-                 * Output string format:
-                 * "GSM,257,2,84,55722,29.478378,54.703674,"
-                 * ',' is used as a delimiter
-                 */
-                while ((str = reader.ReadLine()) != null)
+                if (str.StartsWith("GSM") || str.StartsWith("UMTS"))
                 {
-                    if (str.StartsWith("GSM") || str.StartsWith("UMTS"))
+                    count = 0;
+                    startIndex = 0;
+                    for (int i = 0; i < str.Length; i++)
                     {
-                        count = 0;
-                        startIndex = 0;
-                        for (int i = 0; i < str.Length; i++)
+                        if (str[i] == ',')
                         {
-                            if (str[i] == ',')
+                            count++;
+                            if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
                             {
-                                count++;
-                                if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
+                                extracted = str.Slice(startIndex, i - startIndex);
+                                switch (count)
                                 {
-                                    extracted = str.Slice(startIndex, i - startIndex);
-                                    writer.Write(extracted);
-                                    writer.Write(',');
-                                }
-                                startIndex = i + 1;
+                                    case 1:
+                                        info.type = extracted.ToString();
+                                        break;
+                                    case 2:
+                                        info.countryCode = float.Parse(extracted);
+                                        break;
+                                    case 3:
+                                        info.networkCode = float.Parse(extracted);
+                                        break;
+                                    case 4:
+                                        info.lac = float.Parse(extracted);
+                                        break;
+                                    case 5:
+                                        info.cellId = float.Parse(extracted);
+                                        break;
+                                    case 7:
+                                        info.lon = float.Parse(extracted);
+                                        break;
+                                    case 8:
+                                        info.lan = float.Parse(extracted);
+                                        break;
+                                }    
                             }
+                            startIndex = i + 1;
                         }
-                        writer.WriteLine("");
                     }
                 }
             }
-            else
-            {
-                Console.WriteLine("Failed to execute the request. Error code: " + response.StatusCode);
-            }
+            yield return info; 
         }
     }
 }

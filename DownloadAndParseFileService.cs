@@ -10,39 +10,47 @@ using DownloadService.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using DownloadService.Config;
+using Microsoft.Extensions.Logging;
+using DownloadService.DataSources;
 
 namespace DownloadService
 {
     class DownloadAndParseFileService : BackgroundService
     {
-        private readonly DownloadConfig _configuration;
-        private readonly ILogger<DownloadAndParseFileService> logger;
-        private readonly TimeSpan period = TimeSpan.FromSeconds(2);
-        private Parser? parser;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<DownloadAndParseFileService> _logger;
+        private readonly IDataSource _webDataSource;
+        private Parser _parser;
         public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger,
-            Parser? parser,IOptions<DownloadConfig> configuration)
+            Parser parser, IDataSource webDataSource, IServiceScopeFactory serviceScopeFactory)
         {
-            this.parser = parser;
-            this.logger = logger;
-            _configuration = configuration.Value;
+            _parser = parser;
+            _logger = logger;
+            _webDataSource = webDataSource;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using PeriodicTimer timer = new PeriodicTimer(period);
-            while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
+            //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.Parse(_configuration.timeInterval));
+            using (var scope = _serviceScopeFactory.CreateScope())
             {
-                try
+                var currentConfig = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<DownloadConfig>>();
+                using PeriodicTimer timer = new PeriodicTimer(TimeSpan.Parse("00:00:00:5"));
+                while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                 {
-                    parser.parseFile(_configuration.uri, _configuration.outputPath);
-                    logger.LogInformation("Success download and parse file");   
-                }
-                catch(Exception ex)
-                {
-                    logger.LogInformation($"Failed download and parse file! Description ERROR: {ex.Message}");
+                    try
+                    {
+                        Stream dataSource = _webDataSource.getDataSource(currentConfig.Value.uri);
+                        _parser.parseFile(dataSource);
+                        _logger.LogInformation("Success download and parse file");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation($"Failed download and parse file! Description ERROR: {ex.Message}");
+                    }
                 }
             }
-    
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DownloadService.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace DownloadService.Services.Interfaces
 {
     interface IParseService
     {
-        public void parse(String uri, string outputPath);
+        public IEnumerable<CellInfo> parse(Stream data);
     }
 }

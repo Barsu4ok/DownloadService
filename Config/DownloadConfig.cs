@@ -10,6 +10,7 @@ namespace DownloadService.Config
     {
         public String uri { get; set; }
         public String outputPath { get; set; }
+        public String timeInterval { get; set; }
 
     }
 }
