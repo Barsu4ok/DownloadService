@@ -19,29 +19,29 @@ namespace DownloadService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<DownloadAndParseFileService> _logger;
-        private readonly IDataSource _webDataSource;
+        private readonly IDataSource _dataSource;
         private Parser _parser;
         public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger,
-            Parser parser, IDataSource webDataSource, IServiceScopeFactory serviceScopeFactory)
+            Parser parser, IDataSource dataSource, IServiceScopeFactory serviceScopeFactory)
         {
             _parser = parser;
             _logger = logger;
-            _webDataSource = webDataSource;
+            _dataSource = dataSource;
             _serviceScopeFactory = serviceScopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.Parse(_configuration.timeInterval));
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var currentConfig = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<DownloadConfig>>();
+                //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.Parse(currentConfig.Value.timeInterval));
                 using PeriodicTimer timer = new PeriodicTimer(TimeSpan.Parse("00:00:00:5"));
                 while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                 {
                     try
                     {
-                        Stream dataSource = _webDataSource.getDataSource(currentConfig.Value.uri);
+                        Stream dataSource = _dataSource.getDataSource(currentConfig.Value.uri);
                         _parser.parseFile(dataSource);
                         _logger.LogInformation("Success download and parse file");
                     }
