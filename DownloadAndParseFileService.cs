@@ -41,7 +41,7 @@ namespace DownloadService
                 {
                     try
                     {
-                        Stream dataSource = _dataSource.getDataSource(currentConfig.Value.uri);
+                        Stream dataSource = _dataSource.getDataSource();
                         _parser.parseFile(dataSource);
                         _logger.LogInformation("Success download and parse file");
                     }

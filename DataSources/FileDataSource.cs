@@ -9,11 +9,18 @@ namespace DownloadService.DataSources
 {
     public class FileDataSource : IDataSource
     {
-        public Stream getDataSource(String path)
+        private readonly string _filePath;
+
+        public FileDataSource(string filePath)
         {
-           if(File.Exists(path))
+            _filePath = filePath;
+        }
+
+        public Stream getDataSource()
+        {
+           if(File.Exists(_filePath))
            {
-                return File.OpenRead(path);
+                return File.OpenRead(_filePath);
            }
            else
            {

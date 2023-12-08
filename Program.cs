@@ -13,7 +13,12 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHostedService<DownloadAndParseFileService>();
         services.AddSingleton<IParseService, CellTowerParseService>();
         services.AddSingleton<Parser>();
-        services.AddSingleton<IDataSource,WebDataSource>();
+        services.AddSingleton<IDataSource>(provider =>
+        {
+            var config = provider.GetRequiredService<IOptions<DownloadConfig>>().Value;
+            return new WebDataSource(config.uri);
+        });
+
     })
     .Build();
 await host.RunAsync();

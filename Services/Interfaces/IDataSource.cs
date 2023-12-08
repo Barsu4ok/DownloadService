@@ -8,6 +8,6 @@ namespace DownloadService.Services.Interfaces
 {
     public interface IDataSource
     {
-        public Stream getDataSource(String path);
+        public Stream getDataSource();
     }
 }
