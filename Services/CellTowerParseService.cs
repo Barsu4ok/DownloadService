@@ -54,22 +54,22 @@ namespace DownloadService.Services
                                         info.type = extracted.ToString();
                                         break;
                                     case 2:
-                                        info.countryCode = float.Parse(extracted);
+                                        info.countryCode = extracted.ToString();
                                         break;
                                     case 3:
-                                        info.networkCode = float.Parse(extracted);
+                                        info.networkCode = extracted.ToString();
                                         break;
                                     case 4:
-                                        info.lac = float.Parse(extracted);
+                                        info.lac = extracted.ToString();
                                         break;
                                     case 5:
-                                        info.cellId = float.Parse(extracted);
+                                        info.cellId = extracted.ToString();
                                         break;
                                     case 7:
-                                        info.lon = float.Parse(extracted);
+                                        info.lon = extracted.ToString();
                                         break;
                                     case 8:
-                                        info.lan = float.Parse(extracted);
+                                        info.lan = extracted.ToString();
                                         break;
                                 }    
                             }
@@ -77,8 +77,8 @@ namespace DownloadService.Services
                         }
                     }
                 }
+                yield return info;
             }
-            yield return info; 
         }
     }
 }

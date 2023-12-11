@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,19 +12,17 @@ namespace DownloadService.DataSources
 {
     public class WebDataSource : IDataSource
     {
-        private readonly string _uri;
+        private readonly IOptionsMonitor<WebConfig> _webConfig;
 
-        public WebDataSource(string uri)
+        public WebDataSource(IOptionsMonitor<WebConfig> webConfig)
         {
-           _uri = uri;
+            _webConfig = webConfig;
         }
 
-        public Stream getDataSource()
+        public async Task<Stream> getDataSource()
         {
-            using HttpClient httpClient = new HttpClient();
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, _uri);
-            HttpResponseMessage response = httpClient.Send(request);
-            return response.Content.ReadAsStream() ?? throw new Exception("Request failed");
+            HttpClient httpClient = new HttpClient();
+            return await httpClient.GetStreamAsync(_webConfig.CurrentValue.uri) ?? throw new Exception("Request failed");
         }
     }
 }

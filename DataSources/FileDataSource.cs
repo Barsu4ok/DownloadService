@@ -1,4 +1,6 @@
-﻿using DownloadService.Services.Interfaces;
+﻿using DownloadService.Config;
+using DownloadService.Services.Interfaces;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +11,22 @@ namespace DownloadService.DataSources
 {
     public class FileDataSource : IDataSource
     {
-        private readonly string _filePath;
+        private readonly IOptionsMonitor<FileConfig> _fileConfig;
 
-        public FileDataSource(string filePath)
+        public FileDataSource(IOptionsMonitor<FileConfig> fileConfig)
         {
-            _filePath = filePath;
+            _fileConfig = fileConfig;
         }
 
-        public Stream getDataSource()
+        public async Task<Stream> getDataSource()
         {
-           if(File.Exists(_filePath))
+           if(File.Exists(_fileConfig.CurrentValue.inputFilePath))
            {
-                return File.OpenRead(_filePath);
+                return await Task.FromResult(File.OpenRead(_fileConfig.CurrentValue.inputFilePath));
            }
            else
            {
-                throw new Exception("Read Failed");
+                throw new FileNotFoundException("File not found", _fileConfig.CurrentValue.inputFilePath);
             }
         }
     }
