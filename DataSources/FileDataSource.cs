@@ -1,8 +1,9 @@
 ﻿using DownloadService.Config;
-using DownloadService.Services.Interfaces;
+using DownloadService.Interfaces;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,14 +21,26 @@ namespace DownloadService.DataSources
 
         public async Task<Stream> getDataSource()
         {
-           if(File.Exists(_fileConfig.CurrentValue.inputFilePath))
-           {
-                return await Task.FromResult(File.OpenRead(_fileConfig.CurrentValue.inputFilePath));
-           }
-           else
-           {
-                throw new FileNotFoundException("File not found", _fileConfig.CurrentValue.inputFilePath);
+            using(FileStream stream = File.Open(_fileConfig.CurrentValue.inputFilePath,FileMode.Open))
+            {
+                using(var archive = new ZipArchive(stream))
+                {
+                    foreach(ZipArchiveEntry entry in archive.Entries)
+                    {
+                        if(entry.FullName == _fileConfig.CurrentValue.fileName)
+                        {
+                            MemoryStream memoryStream = new MemoryStream();
+                            using (Stream entryStream = entry.Open())
+                            {
+                                await entryStream.CopyToAsync(memoryStream);
+                                memoryStream.Seek(0, SeekOrigin.Begin); 
+                                return memoryStream; 
+                            }
+                        }
+                    }
+                }
             }
+            throw new Exception("File not found in the archive");
         }
     }
 }

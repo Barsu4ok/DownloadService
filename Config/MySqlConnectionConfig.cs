@@ -8,11 +8,6 @@ namespace DownloadService.Config
 {
     public class MySqlConnectionConfig
     {
-        public string server { get; set; }
-        public string database { get; set; }
-        public string table { get; set; }
-        public string user { get; set; }
-        public string password { get; set; }
-        public string charset { get; set; }
+        public string connectionString { get; set; }
     }
 }

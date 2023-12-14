@@ -1,6 +1,6 @@
 ﻿using DownloadService.Config;
+using DownloadService.Interfaces;
 using DownloadService.Models;
-using DownloadService.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -22,10 +22,24 @@ namespace DownloadService.DataAccess
         {
             using (StreamWriter writer = new StreamWriter(_fileConfig.CurrentValue.outputFilePath, false))
             {
+                var sb = new StringBuilder();
                 foreach (var cellInfo in cellInfoList)
                 {
-                    writer.WriteLine(cellInfo.type + "," + cellInfo.countryCode + "," + cellInfo.networkCode +
-                        "," + cellInfo.lac + "," + cellInfo.cellId + "," + cellInfo.lon + "," + cellInfo.lan);
+                    sb.Append(cellInfo.Radio);
+                    sb.Append(',');
+                    sb.Append(cellInfo.MCC);
+                    sb.Append(',');
+                    sb.Append(cellInfo.MNC);
+                    sb.Append(',');
+                    sb.Append(cellInfo.LAC);
+                    sb.Append(',');
+                    sb.Append(cellInfo.CID);
+                    sb.Append(',');
+                    sb.Append(cellInfo.LON);
+                    sb.Append(',');
+                    sb.Append(cellInfo.LAN);
+                    writer.WriteLine(sb.ToString());
+                    sb.Clear();
                 }
             }
         }

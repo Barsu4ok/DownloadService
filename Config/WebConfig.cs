@@ -8,6 +8,7 @@ namespace DownloadService.Config
 {
     public class WebConfig
     {
-        public String uri { get; set; }
+        public string uri { get; set; }
+        public string fileName { get; set; }
     }
 }

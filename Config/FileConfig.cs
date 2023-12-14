@@ -1,5 +1,4 @@
-﻿using DownloadService.Services.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,8 @@ namespace DownloadService.Config
 {
     public class FileConfig
     {
-        public String inputFilePath { get; set; }
-        public String outputFilePath { get; set; }
+        public string inputFilePath { get; set; }
+        public string outputFilePath { get; set; }
+        public string fileName { get; set; }
     }
 }

@@ -1,8 +1,12 @@
 ﻿using DownloadService.Config;
-using DownloadService.Services.Interfaces;
+using DownloadService.Interfaces;
 using Microsoft.Extensions.Options;
+using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Runtime;
 using System.Text;
@@ -21,8 +25,33 @@ namespace DownloadService.DataSources
 
         public async Task<Stream> getDataSource()
         {
-            HttpClient httpClient = new HttpClient();
-            return await httpClient.GetStreamAsync(_webConfig.CurrentValue.uri) ?? throw new Exception("Request failed");
+            using (HttpClient httpClient = new HttpClient())
+            {
+                HttpResponseMessage response = await httpClient.GetAsync(_webConfig.CurrentValue.uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    using (Stream zipStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        using(ZipArchive archive = new ZipArchive(zipStream,ZipArchiveMode.Read))
+                        {
+                            foreach(ZipArchiveEntry entry in archive.Entries)
+                            {
+                                if(entry.FullName == _webConfig.CurrentValue.fileName)
+                                {
+                                    MemoryStream memoryStream = new MemoryStream();
+                                    using (Stream entryStream = entry.Open())
+                                    {
+                                        await entryStream.CopyToAsync(memoryStream);
+                                        memoryStream.Seek(0, SeekOrigin.Begin);
+                                        return memoryStream;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            throw new Exception("File not found in the archive");
         }
     }
 }

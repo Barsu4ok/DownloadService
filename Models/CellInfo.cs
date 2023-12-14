@@ -8,13 +8,13 @@ namespace DownloadService.Models
 {
     public class CellInfo
     {
-        public string type { get; set; }
-        public string countryCode { get; set; }
-        public string networkCode { get; set; }
-        public string lac { get; set; }
-        public string cellId { get; set; }
-        public string lon { get; set; }
-        public string lan { get; set; }
+        public string Radio { get; set; }
+        public int MCC { get; set; }
+        public int MNC { get; set; }
+        public int LAC { get; set; }
+        public int CID { get; set; }
+        public double LON { get; set; }
+        public double LAN { get; set; }
 
     }
 }
