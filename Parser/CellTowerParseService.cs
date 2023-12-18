@@ -19,7 +19,6 @@ namespace DownloadService.Parser
             ReadOnlySpan<char> str;
             ReadOnlySpan<char> extracted;
             CellInfo info = new CellInfo();
-            CellInfoValidator validator = new CellInfoValidator();
             int count = 0;
             int startIndex = 0;
             /*
@@ -40,53 +39,67 @@ namespace DownloadService.Parser
                 */
             while ((str = reader.ReadLine()) != null)
             {
-                if (str.StartsWith("GSM") || str.StartsWith("UMTS"))
+                try
                 {
-                    count = 0;
-                    startIndex = 0;
-                    for (int i = 0; i < str.Length; i++)
+                    if (str.StartsWith("GSM") || str.StartsWith("UMTS"))
                     {
-                        if (str[i] == ',')
+                        count = 0;
+                        startIndex = 0;
+                        for (int i = 0; i < str.Length; i++)
                         {
-                            count++;
-                            if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
+                            if (str[i] == ',')
                             {
-                                extracted = str.Slice(startIndex, i - startIndex);
-                                switch (count)
+                                count++;
+                                if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
                                 {
-                                    case 1:
-                                        info.Radio = extracted.ToString();
-                                        break;
-                                    case 2:
-                                        info.MCC = int.Parse(extracted.ToString());
-                                        break;
-                                    case 3:
-                                        info.MNC = int.Parse(extracted.ToString());
-                                        break;
-                                    case 4:
-                                        info.LAC = int.Parse(extracted.ToString());
-                                        break;
-                                    case 5:
-                                        info.CID = int.Parse(extracted.ToString());
-                                        break;
-                                    case 7:
-                                        info.LON = double.Parse(extracted.ToString(), CultureInfo.InvariantCulture);
-                                        break;
-                                    case 8:
-                                        info.LAN = double.Parse(extracted.ToString(), CultureInfo.InvariantCulture);
-                                        break;
+                                    extracted = str.Slice(startIndex, i - startIndex);
+                                    switch (count)
+                                    {
+                                        case 1:
+                                            info.Radio = extracted.ToString();
+                                            break;
+                                        case 2:
+                                            if (int.TryParse(extracted, out int mcc))
+                                                info.MCC = mcc;
+                                            else throw new FormatException();
+                                            break;
+                                        case 3:
+                                            if (int.TryParse(extracted, out int mnc))
+                                                info.MNC = mnc;
+                                            else throw new FormatException();
+                                            break;
+                                        case 4:
+                                            if (int.TryParse(extracted, out int lac))
+                                                info.LAC = lac;
+                                            else throw new FormatException();
+                                            break;
+                                        case 5:
+                                            if (int.TryParse(extracted, out int cid))
+                                                info.CID = cid;
+                                            else throw new FormatException();
+                                            break;
+                                        case 7:
+                                            if (double.TryParse(extracted, NumberStyles.Any, CultureInfo.InvariantCulture, out double lon))
+                                                info.LON = lon;
+                                            else throw new FormatException();
+                                            break;
+                                        case 8:
+                                            if (double.TryParse(extracted, NumberStyles.Any, CultureInfo.InvariantCulture, out double lan))
+                                                info.LAN = lan;
+                                            else throw new FormatException();
+                                            break;
+                                    }
                                 }
+                                startIndex = i + 1;
                             }
-                            startIndex = i + 1;
                         }
                     }
                 }
-                var result = validator.Validate(info);
-                if (result.IsValid)
+                catch(Exception e)
                 {
-                    yield return info;
+                    continue;
                 }
-                else continue;
+                yield return info;
             }
         }
     }

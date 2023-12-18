@@ -8,6 +8,6 @@ namespace DownloadService.Config
 {
     public class TimerConfig
     {
-        public String timeInterval { get; set; }
+        public long timeInterval { get; set; }
     }
 }

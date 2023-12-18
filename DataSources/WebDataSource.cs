@@ -1,5 +1,7 @@
 ﻿using DownloadService.Config;
 using DownloadService.Interfaces;
+using DownloadService.Validators;
+using FluentValidation;
 using Microsoft.Extensions.Options;
 using MySqlX.XDevAPI;
 using System;
@@ -17,41 +19,40 @@ namespace DownloadService.DataSources
     public class WebDataSource : IDataSource
     {
         private readonly IOptionsMonitor<WebConfig> _webConfig;
+        private readonly IValidator<WebConfig> _webConfigValidator;
 
-        public WebDataSource(IOptionsMonitor<WebConfig> webConfig)
+        public WebDataSource(IOptionsMonitor<WebConfig> webConfig, IValidator<WebConfig> webConfigValidator)
         {
             _webConfig = webConfig;
+            _webConfigValidator = webConfigValidator;
         }
 
         public async Task<Stream> getDataSource()
         {
-            using (HttpClient httpClient = new HttpClient())
+
+            var resultValidation = _webConfigValidator.Validate(_webConfig.CurrentValue);
+            if (resultValidation.IsValid)
             {
-                HttpResponseMessage response = await httpClient.GetAsync(_webConfig.CurrentValue.uri);
-                if (response.IsSuccessStatusCode)
+                using (HttpClient httpClient = new HttpClient())
                 {
-                    using (Stream zipStream = await response.Content.ReadAsStreamAsync())
+                    HttpResponseMessage response = await httpClient.GetAsync(_webConfig.CurrentValue.uri);
+                    if (response.IsSuccessStatusCode)
                     {
-                        using(ZipArchive archive = new ZipArchive(zipStream,ZipArchiveMode.Read))
+                        using (Stream gzipStream = await response.Content.ReadAsStreamAsync())
                         {
-                            foreach(ZipArchiveEntry entry in archive.Entries)
+                            using (GZipStream decompressionStream = new GZipStream(gzipStream, CompressionMode.Decompress))
                             {
-                                if(entry.FullName == _webConfig.CurrentValue.fileName)
-                                {
-                                    MemoryStream memoryStream = new MemoryStream();
-                                    using (Stream entryStream = entry.Open())
-                                    {
-                                        await entryStream.CopyToAsync(memoryStream);
-                                        memoryStream.Seek(0, SeekOrigin.Begin);
-                                        return memoryStream;
-                                    }
-                                }
+                                MemoryStream memoryStream = new MemoryStream();
+                                await decompressionStream.CopyToAsync(memoryStream);
+                                memoryStream.Seek(0, SeekOrigin.Begin);
+                                return memoryStream;
                             }
                         }
                     }
+                    else throw new Exception(response.StatusCode + "");
                 }
             }
-            throw new Exception("File not found in the archive");
+            else throw new Exception("Invalid uri address");
         }
     }
 }

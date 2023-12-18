@@ -1,6 +1,10 @@
 ﻿using DownloadService.Config;
 using DownloadService.Interfaces;
+using DownloadService.Validators;
+using FluentValidation;
 using Microsoft.Extensions.Options;
+using SharpCompress.Archives.GZip;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.IO.Compression;
@@ -13,34 +17,31 @@ namespace DownloadService.DataSources
     public class FileDataSource : IDataSource
     {
         private readonly IOptionsMonitor<FileConfig> _fileConfig;
+        private readonly IValidator<FileConfig> _fileConfigValidator;
 
-        public FileDataSource(IOptionsMonitor<FileConfig> fileConfig)
+        public FileDataSource(IOptionsMonitor<FileConfig> fileConfig, IValidator<FileConfig> fileConfigValidator)
         {
             _fileConfig = fileConfig;
+            _fileConfigValidator = fileConfigValidator;
         }
 
         public async Task<Stream> getDataSource()
         {
-            using(FileStream stream = File.Open(_fileConfig.CurrentValue.inputFilePath,FileMode.Open))
+            var resultValidation = _fileConfigValidator.Validate(_fileConfig.CurrentValue);
+            if (resultValidation.IsValid)
             {
-                using(var archive = new ZipArchive(stream))
+                using (FileStream fileStream = File.OpenRead(_fileConfig.CurrentValue.inputFilePath))
                 {
-                    foreach(ZipArchiveEntry entry in archive.Entries)
+                    using (GZipStream zipStream = new GZipStream(fileStream, CompressionMode.Decompress))
                     {
-                        if(entry.FullName == _fileConfig.CurrentValue.fileName)
-                        {
-                            MemoryStream memoryStream = new MemoryStream();
-                            using (Stream entryStream = entry.Open())
-                            {
-                                await entryStream.CopyToAsync(memoryStream);
-                                memoryStream.Seek(0, SeekOrigin.Begin); 
-                                return memoryStream; 
-                            }
-                        }
+                        MemoryStream memoryStream = new MemoryStream();
+                        zipStream.CopyTo(memoryStream);
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        return memoryStream;
                     }
                 }
             }
-            throw new Exception("File not found in the archive");
+            else throw new Exception("Input path is not valid");
         }
     }
 }

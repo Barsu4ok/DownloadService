@@ -9,6 +9,6 @@ namespace DownloadService.Interfaces
 {
     public interface IDataTarget
     {
-        public void writeAllData(IEnumerable<CellInfo> cellInfoList);
+        public void writeData(IEnumerable<CellInfo> cellInfoList);
     }
 }
