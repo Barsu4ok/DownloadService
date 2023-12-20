@@ -1,10 +1,5 @@
 ﻿using DownloadService.Config;
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DownloadService.Validators
 {
@@ -12,21 +7,14 @@ namespace DownloadService.Validators
     {
         public MySqlConnectionValidator()
         {
-            RuleFor(mySqlConnection => mySqlConnection.connectionString)
+            RuleFor(mySqlConnection => mySqlConnection.ConnectionString)
                 .NotEmpty()
                 .Must(BeValidConnectionString);
         }
-        private bool BeValidConnectionString(string connectionString)
+        private static bool BeValidConnectionString(string? connectionString)
         {
-            var requiredParams = new[] { "server", "uid", "pwd", "database" };
-            foreach (var param in requiredParams)
-            {
-                if (!connectionString.Contains($"{param}="))
-                {
-                    return false;
-                }   
-            }
-            return true;
+            var requiredParams = new List<string> { "server", "uid", "pwd", "database" };
+            return requiredParams.TrueForAll(param => connectionString != null && connectionString.Contains($"{param}="));
         }
     }
 }

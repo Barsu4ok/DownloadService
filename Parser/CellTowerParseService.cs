@@ -1,106 +1,197 @@
 ﻿using DownloadService.Interfaces;
 using DownloadService.Models;
-using DownloadService.Validators;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DownloadService.Parser
 {
     public class CellTowerParseService : IParseService
     {
-        public IEnumerable<CellInfo> parse(Stream data)
+        public IEnumerable<CellInfo> Parse(Stream data)
         {
-            using StreamReader reader = new StreamReader(data);
-            ReadOnlySpan<char> str;
-            ReadOnlySpan<char> extracted;
-            CellInfo info = new CellInfo();
-            int count = 0;
-            int startIndex = 0;
-            /*
-                * The source line in the file is represented in the following format:
-                * "GSM,257,2,84,55722,0,29.478378,54.703674,1000,2,1,1459770590,1459770590,0"
-                * ',' is used as a delimiter for the source string
-                * The values at the 1,5,7,8 positions are extracted from the source string:
-                * first - Type of communication,
-                * second - Mobile country code,
-                * third - Mobile network code,
-                * fourth - Location Area Code,
-                * fifth - Cell tower ID,
-                * seventh - longitude,
-                * eighth - latitude
-                * Output string format:
-                * "GSM,257,2,84,55722,29.478378,54.703674,"
-                * ',' is used as a delimiter
-                */
-            while ((str = reader.ReadLine()) != null)
+            var info = new CellInfo();
+            using var reader = new StreamReader(data);
+            var sb = new StringBuilder();
+            while (!reader.EndOfStream)
             {
-                try
+                sb.Clear();
+                var counterLbsParameters = 0;
+                var counterLatAndLon = 0;
+                if(
+                TryReadType() &&
+                TryReadInt32() &&
+                TryReadInt32() &&
+                TryReadInt32() &&
+                TryReadInt32() &&
+                TrySkip() &&
+                TryReadDecimal() &&
+                TryReadDecimal())
                 {
-                    if (str.StartsWith("GSM") || str.StartsWith("UMTS"))
+                    yield return info;
+                }
+                SkipLine();
+
+                bool TryReadType()
+                {
+                    sb.Clear();
+                    while (true)
                     {
-                        count = 0;
-                        startIndex = 0;
-                        for (int i = 0; i < str.Length; i++)
+                        sb.Append((char)reader.Read());
+                        if ((sb.Length == 4 && sb.ToString() == "GSM,") || (sb.Length == 5 && sb.ToString() == "UMTS,"))
                         {
-                            if (str[i] == ',')
-                            {
-                                count++;
-                                if (count == 1 || count == 2 || count == 3 || count == 4 || count == 5 || count == 7 || count == 8)
-                                {
-                                    extracted = str.Slice(startIndex, i - startIndex);
-                                    switch (count)
-                                    {
-                                        case 1:
-                                            info.Radio = extracted.ToString();
-                                            break;
-                                        case 2:
-                                            if (int.TryParse(extracted, out int mcc))
-                                                info.MCC = mcc;
-                                            else throw new FormatException();
-                                            break;
-                                        case 3:
-                                            if (int.TryParse(extracted, out int mnc))
-                                                info.MNC = mnc;
-                                            else throw new FormatException();
-                                            break;
-                                        case 4:
-                                            if (int.TryParse(extracted, out int lac))
-                                                info.LAC = lac;
-                                            else throw new FormatException();
-                                            break;
-                                        case 5:
-                                            if (int.TryParse(extracted, out int cid))
-                                                info.CID = cid;
-                                            else throw new FormatException();
-                                            break;
-                                        case 7:
-                                            if (double.TryParse(extracted, NumberStyles.Any, CultureInfo.InvariantCulture, out double lon))
-                                                info.LON = lon;
-                                            else throw new FormatException();
-                                            break;
-                                        case 8:
-                                            if (double.TryParse(extracted, NumberStyles.Any, CultureInfo.InvariantCulture, out double lan))
-                                                info.LAN = lan;
-                                            else throw new FormatException();
-                                            break;
-                                    }
-                                }
-                                startIndex = i + 1;
-                            }
+                            sb.Remove(sb.Length - 1, 1);
+                            info.Act = sb.ToString();
+                            return true;
+                        }
+                        if (sb.Length == 4 && sb.ToString() == "LTE,")
+                        {
+                            return false;
                         }
                     }
                 }
-                catch(Exception e)
+
+                bool TryReadInt32()
                 {
-                    continue;
+                    sb.Clear();
+                    while (true)
+                    {
+                        try
+                        {
+                            var c = (char)reader.Read();
+                            if (c == ',')
+                            {
+                                ++counterLbsParameters;
+                                switch (counterLbsParameters)
+                                {
+                                    case 1:
+                                        if (int.TryParse(sb.ToString(), out var mcc))
+                                        {
+                                            info.Mcc = mcc;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                    case 2:
+                                        if (int.TryParse(sb.ToString(), out var mnc))
+                                        {
+                                            info.Mnc = mnc;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                    case 3:
+                                        if (int.TryParse(sb.ToString(), out var lac))
+                                        {
+                                            info.Lac = lac;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                    case 4:
+                                        if (int.TryParse(sb.ToString(), out var cid))
+                                        {
+                                            info.Cid = cid;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                }
+
+                                return true;
+                            }
+
+
+                            if (!char.IsDigit(c))
+                            {
+                                return false;
+                            }
+
+                            sb.Append(c);
+                        }
+                        catch (FormatException e)
+                        {
+                            Console.WriteLine(e);
+                            return false;
+                        }
+                    }
                 }
-                yield return info;
+
+                bool TrySkip()
+                {
+                    sb.Clear();
+                    while (true)
+                    {
+                        if (reader.Read() == ',')
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                bool TryReadDecimal()
+                {
+                    sb.Clear();
+                    while (true)
+                    {
+                        try
+                        {
+                            var c = (char)reader.Read();
+                            if (c == ',')
+                            {
+                                ++counterLatAndLon;
+                                switch (counterLatAndLon)
+                                {
+                                    case 1:
+                                        if (double.TryParse(sb.ToString(), NumberStyles.Any,
+                                                CultureInfo.InvariantCulture, out var lon))
+                                        {
+                                            info.Lon = lon;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                    case 2:
+                                        if (double.TryParse(sb.ToString(), NumberStyles.Any,
+                                                CultureInfo.InvariantCulture, out var lat))
+                                        {
+                                            info.Lat = lat;
+                                        }
+                                        else throw new FormatException();
+
+                                        break;
+                                }
+
+                                return true;
+                            }
+
+                            if (!char.IsDigit(c) && c != '.')
+                            {
+                                return false;
+                            }
+
+                            sb.Append(c);
+                        }
+                        catch (FormatException e)
+                        {
+                            Console.WriteLine(e);
+                            return false;
+                        }
+                    }
+                }
+
+                void SkipLine()
+                {
+                    sb.Clear();
+                    while (!reader.EndOfStream)
+                    {
+                        if (reader.Read() == '\n')
+                        {
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
 }
+

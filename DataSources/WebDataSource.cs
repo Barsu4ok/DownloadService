@@ -1,18 +1,8 @@
 ﻿using DownloadService.Config;
 using DownloadService.Interfaces;
-using DownloadService.Validators;
 using FluentValidation;
 using Microsoft.Extensions.Options;
-using MySqlX.XDevAPI;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.IO.Pipelines;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DownloadService.DataSources
 {
@@ -27,32 +17,27 @@ namespace DownloadService.DataSources
             _webConfigValidator = webConfigValidator;
         }
 
-        public async Task<Stream> getDataSource()
+        public async Task<Stream> GetDataSource()
         {
 
-            var resultValidation = _webConfigValidator.Validate(_webConfig.CurrentValue);
-            if (resultValidation.IsValid)
+            var resultValidation = await _webConfigValidator.ValidateAsync(_webConfig.CurrentValue);
+            using var httpClient = new HttpClient();
+            if (!resultValidation.IsValid) 
             {
-                using (HttpClient httpClient = new HttpClient())
-                {
-                    HttpResponseMessage response = await httpClient.GetAsync(_webConfig.CurrentValue.uri);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        using (Stream gzipStream = await response.Content.ReadAsStreamAsync())
-                        {
-                            using (GZipStream decompressionStream = new GZipStream(gzipStream, CompressionMode.Decompress))
-                            {
-                                MemoryStream memoryStream = new MemoryStream();
-                                await decompressionStream.CopyToAsync(memoryStream);
-                                memoryStream.Seek(0, SeekOrigin.Begin);
-                                return memoryStream;
-                            }
-                        }
-                    }
-                    else throw new Exception(response.StatusCode + "");
-                }
+                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
             }
-            else throw new Exception("Invalid uri address");
+            var response = await httpClient.GetAsync(_webConfig.CurrentValue.Uri);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"HTTP request failed with status code: {response.StatusCode}");
+            }
+
+            await using var gzipStream = await response.Content.ReadAsStreamAsync();
+            await using var decompressionStream = new GZipStream(gzipStream, CompressionMode.Decompress);
+            var memoryStream = new MemoryStream();
+            await decompressionStream.CopyToAsync(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return memoryStream;
         }
     }
 }

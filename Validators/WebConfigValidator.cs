@@ -1,10 +1,5 @@
 ﻿using DownloadService.Config;
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DownloadService.Validators
 {
@@ -12,11 +7,11 @@ namespace DownloadService.Validators
     {
         public WebConfigValidator()
         {
-            RuleFor(x => x.uri).NotEmpty().Must(BeValidUrl);
+            RuleFor(x => x.Uri).NotEmpty().Must(BeValidUrl);
         }
-        private bool BeValidUrl(string url)
+        private static bool BeValidUrl(string? url)
         {
-            return Uri.TryCreate(url, UriKind.Absolute, out Uri result) &&
+            return Uri.TryCreate(url, UriKind.Absolute, out var result) &&
                    (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
         }
 

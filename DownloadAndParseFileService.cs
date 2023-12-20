@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using DownloadService.Config;
-using Microsoft.Extensions.Logging;
-using DownloadService.DataSources;
-using DownloadService.DataAccess;
 using DownloadService.Interfaces;
-using DownloadService.Validators;
-using MySqlX.XDevAPI.Common;
 using FluentValidation;
 
 namespace DownloadService
 {
-    class DownloadAndParseFileService : BackgroundService
+    internal class DownloadAndParseFileService : BackgroundService
     {
         private readonly IOptionsMonitor<TimerConfig> _timerConfig;
         private readonly ILogger<DownloadAndParseFileService> _logger;
@@ -40,15 +29,15 @@ namespace DownloadService
         {
             try
             {
-                var resultValidation = _timerConfigValidator.Validate(_timerConfig.CurrentValue);
+                var resultValidation = await _timerConfigValidator.ValidateAsync(_timerConfig.CurrentValue, stoppingToken);
                 if (resultValidation.IsValid)
                 {
                     using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10000));
                     //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_timerConfig.CurrentValue.timeInterval));
                     while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                     {
-                        await using var dataSource = await _dataSource.getDataSource();
-                        _dataTarget.writeData(_parseService.parse(dataSource));
+                        await using var dataSource = await _dataSource.GetDataSource();
+                        _dataTarget.WriteData(_parseService.Parse(dataSource));
                         _logger.LogInformation("Success download and parse file");
 
                     }

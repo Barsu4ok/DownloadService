@@ -1,5 +1,4 @@
 using DownloadService;
-using Microsoft.Extensions.Options;
 using DownloadService.Config;
 using DownloadService.DataSources;
 using DownloadService.DataAccess;
@@ -8,10 +7,10 @@ using DownloadService.Interfaces;
 using DownloadService.Validators;
 using FluentValidation;
 
-IHost host = Host.CreateDefaultBuilder(args)
+var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext,services) =>
     {
-        IConfiguration configuration = hostContext.Configuration;
+        var configuration = hostContext.Configuration;
         services.Configure<WebConfig>(configuration.GetSection("WebConfig"));
         services.Configure<FileConfig>(configuration.GetSection("FileConfig"));
         services.Configure<TimerConfig>(configuration.GetSection("TimerConfig"));
@@ -22,10 +21,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IValidator<WebConfig>, WebConfigValidator>();
         services.AddHostedService<DownloadAndParseFileService>();
         services.AddSingleton<IParseService, CellTowerParseService>();
-        //services.AddSingleton<IDataSource,WebDataSource>();
-        //services.AddSingleton<IDataTarget, MySQLDataTarget>();
-        services.AddSingleton<IDataSource, FileDataSource>();
-        services.AddSingleton<IDataTarget, FileDataTarget>();
+        services.AddSingleton<IDataSource,WebDataSource>();
+        services.AddSingleton<IDataTarget, MySqlDataTarget>();
+        //services.AddSingleton<IDataSource, FileDataSource>();
+        //services.AddSingleton<IDataTarget, FileDataTarget>();
 
     })
     .Build();

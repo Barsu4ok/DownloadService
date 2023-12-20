@@ -1,10 +1,5 @@
 ﻿using DownloadService.Config;
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DownloadService.Validators
 {
@@ -12,7 +7,7 @@ namespace DownloadService.Validators
     {
         public TimerConfigValidator()
         {
-            RuleFor(timer => timer.timeInterval).NotNull().GreaterThan(0);
+            RuleFor(timer => timer.TimeInterval).NotNull();
         }
     }
 }

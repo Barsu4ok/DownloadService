@@ -1,15 +1,10 @@
 ﻿using DownloadService.Config;
 using DownloadService.Interfaces;
 using DownloadService.Models;
-using DownloadService.Validators;
 using FluentValidation;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DownloadService.DataAccess
 {
@@ -23,34 +18,31 @@ namespace DownloadService.DataAccess
             _fileConfig = fileConfig;
             _fileConfigValidator = fileConfigValidator;
         }
-        public void writeData(IEnumerable<CellInfo> cellInfoList)
+        public void WriteData(IEnumerable<CellInfo> cellInfoList)
         {
-            var delimiter = CultureInfo.InvariantCulture;
             var resultValidation = _fileConfigValidator.Validate(_fileConfig.CurrentValue);
-            if (resultValidation.IsValid)
+            if (!resultValidation.IsValid)
             {
-                using (StreamWriter writer = new StreamWriter(_fileConfig.CurrentValue.outputFilePath, false))
-                {
-                    foreach (var cellInfo in cellInfoList)
-                    {
-                        writer.Write(cellInfo.Radio);
-                        writer.Write(',');
-                        writer.Write(cellInfo.MCC);
-                        writer.Write(',');
-                        writer.Write(cellInfo.MNC);
-                        writer.Write(',');
-                        writer.Write(cellInfo.LAC);
-                        writer.Write(',');
-                        writer.Write(cellInfo.CID);
-                        writer.Write(',');
-                        writer.Write(cellInfo.LON.ToString(delimiter));
-                        writer.Write(',');
-                        writer.Write(cellInfo.LAN.ToString(delimiter));
-                        writer.WriteLine("");
-                    }
-                }
+                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
             }
-            else throw new Exception("Output path is not valid");
+
+            using var writer = new StreamWriter(_fileConfig.CurrentValue.OutputFilePath ?? throw new InvalidOperationException(), false);
+            foreach (var cellInfo in cellInfoList)
+            {
+                writer.Write(cellInfo.Act);
+                writer.Write(',');
+                writer.Write(cellInfo.Mcc);
+                writer.Write(',');
+                writer.Write(cellInfo.Mnc);
+                writer.Write(',');
+                writer.Write(cellInfo.Lac);
+                writer.Write(',');
+                writer.Write(cellInfo.Cid);
+                writer.Write(',');
+                writer.Write(cellInfo.Lon.ToString(CultureInfo.InvariantCulture));
+                writer.Write(',');
+                writer.WriteLine(cellInfo.Lat.ToString(CultureInfo.InvariantCulture));
+            }
         }
     }
 }
