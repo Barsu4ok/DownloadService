@@ -33,9 +33,10 @@ namespace DownloadService
                 if (resultValidation.IsValid)
                 {
                     using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10000));
-                    //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_timerConfig.CurrentValue.timeInterval));
+                    //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_timerConfig.CurrentValue.TimeInterval));
                     while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                     {
+                        _logger.LogInformation("Starting the parsing process ");
                         await using var dataSource = await _dataSource.GetDataSource();
                         _dataTarget.WriteData(_parseService.Parse(dataSource));
                         _logger.LogInformation("Success download and parse file");

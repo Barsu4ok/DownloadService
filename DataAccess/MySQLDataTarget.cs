@@ -5,7 +5,8 @@ using FluentValidation;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
 using System.Data;
-
+using System.Globalization;
+using System.Text;
 
 
 namespace DownloadService.DataAccess
@@ -16,20 +17,9 @@ namespace DownloadService.DataAccess
         private readonly IValidator<MySqlConnectionConfig> _mySqlConnectionConfigValidator;
         private const string GetLatAndLon = "SELECT LON, LAT FROM @tableName  WHERE MCC = @MCC AND MNC=@MNC AND LAC = @LAC AND CID = @CID;";
         private const string GetLbs = "SELECT MCC, MNC, LAC, CID FROM @tableName WHERE LON = @LON AND LAT = @LAT";
-        private const string CreateTable =
-            "'CREATE TABLE `towerdata` (" +
-            " `id` int NOT NULL AUTO_INCREMENT," +
-            "  `Act` enum(\\'GSM\\',\\'UMTS\\') NOT NULL," +
-            "`MCC` smallint NOT NULL," +
-            " `MNC` smallint NOT NULL," +
-            " `LAC` mediumint NOT NULL," +
-            "  `CID` int NOT NULL," +
-            " `LON` double NOT NULL," +
-            " `LAT` double NOT NULL," +
-            " PRIMARY KEY (`id`)," +
-            "  KEY `idx_LON_LAN` (`LON`,`LAT`)," +
-            "  KEY `idx_LBS` (`MCC`,`MNC`,`LAC`,`CID`))" +
-            " ENGINE=InnoDB AUTO_INCREMENT=1757506 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'";
+
+        private const string Query = "INSERT INTO towerdata(Act,MCC,MNC,LAC,CID,LON,LAT) VALUES ";
+        
         public MySqlDataTarget(IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
         {
             _connectionConfig = connectionConfig;
@@ -38,67 +28,49 @@ namespace DownloadService.DataAccess
 
         public void WriteData(IEnumerable<CellInfo> cellInfoList)
         {
-            var resultValidation = _mySqlConnectionConfigValidator.Validate(_connectionConfig.CurrentValue);
-            if (!resultValidation.IsValid)
-            {
-                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
-            }
+            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig);
 
-            const int batchSize = 10;
+            const int batchSize = 20;
             var count = 0;
 
             using var connection = new MySqlConnection(_connectionConfig.CurrentValue.ConnectionString);
             connection.Open();
 
-            var transaction = connection.BeginTransaction();
             try
             {
                 var delete = new MySqlCommand("DELETE FROM towerdata", connection);
                 delete.ExecuteNonQuery();
-
-                var command = new MySqlCommand($"SELECT *  FROM {_connectionConfig.CurrentValue.TableName} WHERE 1=0;", connection);
-                var adapter = new MySqlDataAdapter(command);
-                var builder = new MySqlCommandBuilder(adapter);
-                var dataset = new DataSet();
-                adapter.Fill(dataset);
-                var insert = builder.GetInsertCommand();
-                
+                var sb = new StringBuilder(500);
+                sb.Append(Query);
                 foreach (var cellTower in cellInfoList)
                 {
-                    insert.Parameters.Clear();
-
-                    insert.Parameters.Add("@p1", MySqlDbType.VarChar).Value = cellTower.Act;
-                    insert.Parameters.Add("@p2", MySqlDbType.Int16).Value = cellTower.Mcc;
-                    insert.Parameters.Add("@p3", MySqlDbType.Int16).Value = cellTower.Mnc;
-                    insert.Parameters.Add("@p4", MySqlDbType.Int32).Value = cellTower.Lac;
-                    insert.Parameters.Add("@p5", MySqlDbType.Int32).Value = cellTower.Cid;
-                    insert.Parameters.Add("@p6", MySqlDbType.Double).Value = cellTower.Lon;
-                    insert.Parameters.Add("@p7", MySqlDbType.Double).Value = cellTower.Lat;
-
-                    insert.ExecuteNonQuery();
+                    sb.Append("('").Append(cellTower.Act).Append("'").Append(",");
+                    sb.Append(cellTower.Mcc).Append(",");
+                    sb.Append(cellTower.Mnc).Append(",");
+                    sb.Append(cellTower.Lac).Append(",");
+                    sb.Append(cellTower.Cid).Append(",");
+                    sb.Append(cellTower.Lon.ToString(CultureInfo.InvariantCulture)).Append(",");
+                    sb.Append(cellTower.Lat.ToString(CultureInfo.InvariantCulture)).Append("),");
                     count++;
-
-                    if (count % batchSize != 0) continue;
-                    adapter.Fill(dataset);
-                    transaction.Commit();
-                    transaction = connection.BeginTransaction();
+                    if (count % batchSize == 0)
+                    {
+                        sb.Remove(sb.Length - 1, 1);
+                        using var command = new MySqlCommand(sb.ToString(),connection);
+                        command.ExecuteNonQuery();
+                        sb.Clear();
+                        sb.Append(Query);
+                    }
                 }
             }
             catch (MySqlException ex)
             {
-                transaction.Rollback();
                 Console.WriteLine($"Error MySQL: {ex.Message}");
             }
-            transaction.Commit();
         }
         public CellInfo GetCoordinatesByLbs(CellInfo cellTower)
         {
             var info = new CellInfo();
-            var resultValidation = _mySqlConnectionConfigValidator.Validate(_connectionConfig.CurrentValue);
-            if (!resultValidation.IsValid)
-            {
-                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
-            }
+            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig);
             using var connection = new MySqlConnection(_connectionConfig.CurrentValue.ConnectionString);
             connection.Open();
 
@@ -129,11 +101,7 @@ namespace DownloadService.DataAccess
         public CellInfo GetLsb(CellInfo cellTower)
         {
             var info = new CellInfo();
-            var resultValidation = _mySqlConnectionConfigValidator.Validate(_connectionConfig.CurrentValue);
-            if (!resultValidation.IsValid)
-            {
-                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
-            }
+            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig);
             using var connection = new MySqlConnection(_connectionConfig.CurrentValue.ConnectionString);
             connection.Open();
 
@@ -150,6 +118,15 @@ namespace DownloadService.DataAccess
             info.Cid = Convert.ToInt32(reader["CID"]);
 
             return info;
+        }
+
+        private static void ValidateConfig(IValidator<MySqlConnectionConfig> validator, IOptionsMonitor<MySqlConnectionConfig> config)
+        {
+            var resultValidation = validator.Validate(config.CurrentValue);
+            if (!resultValidation.IsValid)
+            {
+                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
+            }
         }
     }
 }
