@@ -8,12 +8,12 @@ namespace DownloadService
     internal class DownloadAndParseFileService : BackgroundService
     {
         private readonly IOptionsMonitor<TimerConfig> _timerConfig;
-        private readonly ILogger<DownloadAndParseFileService> _logger;
+        private readonly ILoggerService _logger;
         private readonly IValidator<TimerConfig> _timerConfigValidator;
         private readonly IDataSource _dataSource;
         private readonly IDataTarget _dataTarget;
         private readonly IParseService _parseService;
-        public DownloadAndParseFileService(ILogger<DownloadAndParseFileService> logger,
+        public DownloadAndParseFileService(ILoggerService logger,
             IParseService parseService, IDataSource dataSource, IOptionsMonitor<TimerConfig> timerConfig,
             IDataTarget dataTarget, IValidator<TimerConfig> timerConfigValidator)
         {
@@ -36,18 +36,18 @@ namespace DownloadService
                     //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_timerConfig.CurrentValue.TimeInterval));
                     while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                     {
-                        _logger.LogInformation("Starting the parsing process ");
+                        _logger.Log(LogLevel.Information,"Starting the parsing process ");
                         await using var dataSource = await _dataSource.GetDataSource();
                         _dataTarget.WriteData(_parseService.Parse(dataSource));
-                        _logger.LogInformation("Success download and parse file");
+                        _logger.Log(LogLevel.Information,"Success download and parse file");
 
                     }
                 }
-                else _logger.LogInformation("Incorrect time interval value");
+                else _logger.Log(LogLevel.Warning,"Incorrect time interval value");
             }
             catch(Exception e)
             {
-                _logger.LogInformation(e.Message);
+                _logger.Log(LogLevel.Error,e.Message);
             }
             
         }

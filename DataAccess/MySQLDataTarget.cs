@@ -13,6 +13,7 @@ namespace DownloadService.DataAccess
 {
     public class MySqlDataTarget : IDataTarget
     {
+        public readonly ILoggerService _logger;
         private readonly IOptionsMonitor<MySqlConnectionConfig> _connectionConfig;
         private readonly IValidator<MySqlConnectionConfig> _mySqlConnectionConfigValidator;
         private const string GetLatAndLon = "SELECT LON, LAT FROM @tableName  WHERE MCC = @MCC AND MNC=@MNC AND LAC = @LAC AND CID = @CID;";
@@ -20,22 +21,24 @@ namespace DownloadService.DataAccess
 
         private const string Query = "INSERT INTO towerdata(Act,MCC,MNC,LAC,CID,LON,LAT) VALUES ";
         
-        public MySqlDataTarget(IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
+        public MySqlDataTarget(ILoggerService logger,IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
         {
+            _logger = logger;
             _connectionConfig = connectionConfig;
             _mySqlConnectionConfigValidator = mySqlConnectionConfigValidator;
         }
 
         public void WriteData(IEnumerable<CellInfo> cellInfoList)
         {
-            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig);
-
+            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig); 
             const int batchSize = 20;
             var count = 0;
 
             using var connection = new MySqlConnection(_connectionConfig.CurrentValue.ConnectionString);
             connection.Open();
+            var commandCheckState = new MySqlCommand($"SELECT COUNT(*) FROM {_connectionConfig.CurrentValue.TableName};", connection);
 
+            _logger.Log(LogLevel.Information, "number of records in the database at the beginning: " +(long)commandCheckState.ExecuteScalar());
             try
             {
                 var delete = new MySqlCommand("DELETE FROM towerdata", connection);
@@ -61,10 +64,11 @@ namespace DownloadService.DataAccess
                         sb.Append(Query);
                     }
                 }
+                _logger.Log(LogLevel.Information, "number of records in the database at the end: " + (long)commandCheckState.ExecuteScalar());
             }
             catch (MySqlException ex)
             {
-                Console.WriteLine($"Error MySQL: {ex.Message}");
+                _logger.Log(LogLevel.Error,ex.Message);
             }
         }
         public CellInfo GetCoordinatesByLbs(CellInfo cellTower)

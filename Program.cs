@@ -4,6 +4,7 @@ using DownloadService.DataSources;
 using DownloadService.DataAccess;
 using DownloadService.Parser;
 using DownloadService.Interfaces;
+using DownloadService.Logger;
 using DownloadService.Validators;
 using FluentValidation;
 
@@ -15,16 +16,19 @@ var host = Host.CreateDefaultBuilder(args)
         services.Configure<FileConfig>(configuration.GetSection("FileConfig"));
         services.Configure<TimerConfig>(configuration.GetSection("TimerConfig"));
         services.Configure<MySqlConnectionConfig>(configuration.GetSection("MySqlConfig"));
+        services.Configure<LoggerConfig>(configuration.GetSection("LoggerConfig"));
         services.AddSingleton<IValidator<FileConfig>, FileConfigValidator>();
         services.AddSingleton<IValidator<MySqlConnectionConfig>, MySqlConnectionValidator>();
         services.AddSingleton<IValidator<TimerConfig>, TimerConfigValidator>();
         services.AddSingleton<IValidator<WebConfig>, WebConfigValidator>();
         services.AddHostedService<DownloadAndParseFileService>();
         services.AddSingleton<IParseService, CellTowerParseService>();
-        services.AddSingleton<IDataSource,WebDataSource>();
-        services.AddSingleton<IDataTarget, MySqlDataTarget>();
-        //services.AddSingleton<IDataSource, FileDataSource>();
-        //services.AddSingleton<IDataTarget, FileDataTarget>();
+        services.AddSingleton<IFileService, FileService>();
+        services.AddSingleton<ILoggerService, LoggerService>();
+        //services.AddSingleton<IDataSource,WebDataSource>();
+        //services.AddSingleton<IDataTarget, MySqlDataTarget>();
+        services.AddSingleton<IDataSource, FileDataSource>();
+        services.AddSingleton<IDataTarget, FileDataTarget>();
 
     })
     .Build();

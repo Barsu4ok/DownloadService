@@ -1,0 +1,56 @@
+22.12.2023 15:54:27|Information|Starting the parsing process 
+22.12.2023 15:54:28|Information|Success download and parse file
+22.12.2023 15:54:37|Information|Starting the parsing process 
+22.12.2023 15:54:37|Information|Success download and parse file
+22.12.2023 15:54:47|Information|Starting the parsing process 
+22.12.2023 15:54:47|Information|Success download and parse file
+22.12.2023 15:54:57|Information|Starting the parsing process 
+22.12.2023 15:54:57|Information|Success download and parse file
+22.12.2023 16:17:39|Information|Starting the parsing process 
+22.12.2023 16:17:39|Information|Successful retrieval of data from the archive
+22.12.2023 16:17:39|Information|Successful writing of data to a file
+22.12.2023 16:17:39|Information|Success download and parse file
+22.12.2023 16:17:49|Information|Starting the parsing process 
+22.12.2023 16:17:49|Information|Successful retrieval of data from the archive
+22.12.2023 16:17:49|Information|Successful writing of data to a file
+22.12.2023 16:17:49|Information|Success download and parse file
+22.12.2023 16:17:59|Information|Starting the parsing process 
+22.12.2023 16:17:59|Information|Successful retrieval of data from the archive
+22.12.2023 16:17:59|Information|Successful writing of data to a file
+22.12.2023 16:17:59|Information|Success download and parse file
+22.12.2023 16:18:09|Information|Starting the parsing process 
+22.12.2023 16:18:09|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:09|Information|Successful writing of data to a file
+22.12.2023 16:18:09|Information|Success download and parse file
+22.12.2023 16:18:19|Information|Starting the parsing process 
+22.12.2023 16:18:19|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:19|Information|Successful writing of data to a file
+22.12.2023 16:18:19|Information|Success download and parse file
+22.12.2023 16:18:29|Information|Starting the parsing process 
+22.12.2023 16:18:29|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:29|Information|Successful writing of data to a file
+22.12.2023 16:18:29|Information|Success download and parse file
+22.12.2023 16:18:39|Information|Starting the parsing process 
+22.12.2023 16:18:39|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:39|Information|Successful writing of data to a file
+22.12.2023 16:18:39|Information|Success download and parse file
+22.12.2023 16:18:49|Information|Starting the parsing process 
+22.12.2023 16:18:49|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:49|Information|Successful writing of data to a file
+22.12.2023 16:18:49|Information|Success download and parse file
+22.12.2023 16:18:59|Information|Starting the parsing process 
+22.12.2023 16:18:59|Information|Successful retrieval of data from the archive
+22.12.2023 16:18:59|Information|Successful writing of data to a file
+22.12.2023 16:18:59|Information|Success download and parse file
+22.12.2023 16:19:09|Information|Starting the parsing process 
+22.12.2023 16:19:09|Information|Successful retrieval of data from the archive
+22.12.2023 16:19:09|Information|Successful writing of data to a file
+22.12.2023 16:19:09|Information|Success download and parse file
+22.12.2023 16:19:19|Information|Starting the parsing process 
+22.12.2023 16:19:19|Information|Successful retrieval of data from the archive
+22.12.2023 16:19:19|Information|Successful writing of data to a file
+22.12.2023 16:19:19|Information|Success download and parse file
+22.12.2023 16:19:29|Information|Starting the parsing process 
+22.12.2023 16:19:29|Information|Successful retrieval of data from the archive
+22.12.2023 16:19:29|Information|Successful writing of data to a file
+22.12.2023 16:19:29|Information|Success download and parse file

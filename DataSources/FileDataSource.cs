@@ -9,9 +9,11 @@ namespace DownloadService.DataSources
     {
         private readonly IOptionsMonitor<FileConfig> _fileConfig;
         private readonly IValidator<FileConfig> _fileConfigValidator;
+        private readonly ILoggerService _logger;
 
-        public FileDataSource(IOptionsMonitor<FileConfig> fileConfig, IValidator<FileConfig> fileConfigValidator)
+        public FileDataSource(ILoggerService logger,IOptionsMonitor<FileConfig> fileConfig, IValidator<FileConfig> fileConfigValidator)
         {
+            _logger = logger;
             _fileConfig = fileConfig;
             _fileConfigValidator = fileConfigValidator;
         }
@@ -21,7 +23,7 @@ namespace DownloadService.DataSources
             var resultValidation = await _fileConfigValidator.ValidateAsync(_fileConfig.CurrentValue);
             if (!resultValidation.IsValid)
             {
-                throw new ValidationException($"Validation failed: {resultValidation.Errors}");
+                _logger.Log(LogLevel.Error,$"Validation failed: {resultValidation.Errors}");
             }
 
             await using var fileStream = File.OpenRead(_fileConfig.CurrentValue.InputFilePath ?? throw new InvalidOperationException());
@@ -29,6 +31,7 @@ namespace DownloadService.DataSources
             var memoryStream = new MemoryStream();
             await zipStream.CopyToAsync(memoryStream);
             memoryStream.Seek(0, SeekOrigin.Begin);
+            _logger.Log(LogLevel.Information, "Successful retrieval of data from the archive");
             return memoryStream;
         }
     }
