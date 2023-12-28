@@ -4,88 +4,72 @@ using DownloadService.Models;
 using FluentValidation;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using System.Data;
-
+using System.Globalization;
+using System.Text;
 
 
 namespace DownloadService.DataAccess
 {
     public class MySqlDataTarget : IDataTarget
     {
+        private readonly ILoggerService _logger;
         private readonly IOptionsMonitor<MySqlConnectionConfig> _connectionConfig;
         private readonly IValidator<MySqlConnectionConfig> _mySqlConnectionConfigValidator;
-        private const string GetLatAndLon = "SELECT LON, LAT FROM @tableName  WHERE MCC = @MCC AND MNC=@MNC AND LAC = @LAC AND CID = @CID;";
-        private const string GetLbs = "SELECT MCC, MNC, LAC, CID FROM @tableName WHERE LON = @LON AND LAT = @LAT";
-        private const string CreateTable =
-            "'CREATE TABLE `towerdata` (" +
-            " `id` int NOT NULL AUTO_INCREMENT," +
-            "  `Act` enum(\\'GSM\\',\\'UMTS\\') NOT NULL," +
-            "`MCC` smallint NOT NULL," +
-            " `MNC` smallint NOT NULL," +
-            " `LAC` mediumint NOT NULL," +
-            "  `CID` int NOT NULL," +
-            " `LON` double NOT NULL," +
-            " `LAT` double NOT NULL," +
-            " PRIMARY KEY (`id`)," +
-            "  KEY `idx_LON_LAN` (`LON`,`LAT`)," +
-            "  KEY `idx_LBS` (`MCC`,`MNC`,`LAC`,`CID`))" +
-            " ENGINE=InnoDB AUTO_INCREMENT=1757506 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'";
-        public MySqlDataTarget(IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
+        private const string GetLatAndLon = "SELECT lng, lat FROM @tableName  WHERE mcc = @MCC AND mnc = @MNC AND lac = @LAC AND cid = @CID;";
+        private const string GetLbs = "SELECT mcc, mnc, lac, cid FROM @tableName WHERE lng = @LON AND lat = @LAT";
+
+        private const string Query = "INSERT INTO towerdata(radio,mcc,mnc,lac,cid,lng,lat) VALUES ";
+        
+        public MySqlDataTarget(ILoggerService logger,IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
         {
+            _logger = logger;
             _connectionConfig = connectionConfig;
             _mySqlConnectionConfigValidator = mySqlConnectionConfigValidator;
         }
 
         public void WriteData(IEnumerable<CellInfo> cellInfoList)
         {
-            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig);
-
-            const int batchSize = 10;
+            ValidateConfig(_mySqlConnectionConfigValidator, _connectionConfig); 
+            const int batchSize = 20;
             var count = 0;
 
             using var connection = new MySqlConnection(_connectionConfig.CurrentValue.ConnectionString);
             connection.Open();
+            var commandCheckState = new MySqlCommand($"SELECT COUNT(*) FROM {_connectionConfig.CurrentValue.TableName};", connection);
 
-            var transaction = connection.BeginTransaction();
+            _logger.Log(LogLevel.Information, "number of records in the database at the beginning: " +(long)commandCheckState.ExecuteScalar());
             try
             {
                 var delete = new MySqlCommand("DELETE FROM towerdata", connection);
                 delete.ExecuteNonQuery();
-
-                var command = new MySqlCommand($"SELECT *  FROM {_connectionConfig.CurrentValue.TableName} WHERE 1=0;", connection);
-                var adapter = new MySqlDataAdapter(command);
-                var builder = new MySqlCommandBuilder(adapter);
-                var dataset = new DataSet();
-                adapter.Fill(dataset);
-                var insert = builder.GetInsertCommand();
-                
+                _logger.Log(LogLevel.Information, "the number of records in the database after clearing: " + (long)commandCheckState.ExecuteScalar());
+                var sb = new StringBuilder(500);
+                sb.Append(Query);
                 foreach (var cellTower in cellInfoList)
                 {
-                    insert.Parameters.Clear();
-
-                    insert.Parameters.Add("@p1", MySqlDbType.VarChar).Value = cellTower.Act;
-                    insert.Parameters.Add("@p2", MySqlDbType.Int16).Value = cellTower.Mcc;
-                    insert.Parameters.Add("@p3", MySqlDbType.Int16).Value = cellTower.Mnc;
-                    insert.Parameters.Add("@p4", MySqlDbType.Int32).Value = cellTower.Lac;
-                    insert.Parameters.Add("@p5", MySqlDbType.Int32).Value = cellTower.Cid;
-                    insert.Parameters.Add("@p6", MySqlDbType.Double).Value = cellTower.Lon;
-                    insert.Parameters.Add("@p7", MySqlDbType.Double).Value = cellTower.Lat;
-
-                    insert.ExecuteNonQuery();
+                    sb.Append("('").Append(cellTower.Radio).Append("'").Append(",");
+                    sb.Append(cellTower.Mcc).Append(",");
+                    sb.Append(cellTower.Mnc).Append(",");
+                    sb.Append(cellTower.Lac).Append(",");
+                    sb.Append(cellTower.Cid).Append(",");
+                    sb.Append(cellTower.Lng.ToString(CultureInfo.InvariantCulture)).Append(",");
+                    sb.Append(cellTower.Lat.ToString(CultureInfo.InvariantCulture)).Append("),");
                     count++;
-
-                    if (count % batchSize != 0) continue;
-                    adapter.Fill(dataset);
-                    transaction.Commit();
-                    transaction = connection.BeginTransaction();
+                    if (count % batchSize == 0)
+                    {
+                        sb.Remove(sb.Length - 1, 1);
+                        using var command = new MySqlCommand(sb.ToString(),connection);
+                        command.ExecuteNonQuery();
+                        sb.Clear();
+                        sb.Append(Query);
+                    }
                 }
+                _logger.Log(LogLevel.Information, "number of records in the database at the end: " + (long)commandCheckState.ExecuteScalar());
             }
             catch (MySqlException ex)
             {
-                transaction.Rollback();
-                Console.WriteLine($"Error MySQL: {ex.Message}");
+                _logger.Log(LogLevel.Error,ex.Message);
             }
-            transaction.Commit();
         }
         public CellInfo GetCoordinatesByLbs(CellInfo cellTower)
         {
@@ -108,7 +92,7 @@ namespace DownloadService.DataAccess
 
             if (double.TryParse(reader["LON"].ToString(), out var lon))
             {
-                info.Lon = lon;
+                info.Lng = lon;
             }
 
             if (double.TryParse(reader["LAT"].ToString(), out var lan))
@@ -127,7 +111,7 @@ namespace DownloadService.DataAccess
 
             using var command = new MySqlCommand(GetLbs, connection);
             command.Parameters.AddWithValue("@tableName", _connectionConfig.CurrentValue.TableName);
-            command.Parameters.AddWithValue("@LON", cellTower.Lon);
+            command.Parameters.AddWithValue("@LON", cellTower.Lng);
             command.Parameters.AddWithValue("@LAT", cellTower.Lat);
 
             using var reader = command.ExecuteReader();
