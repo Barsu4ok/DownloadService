@@ -4,7 +4,6 @@ using DownloadService.Models;
 using FluentValidation;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using System.Data;
 using System.Globalization;
 using System.Text;
 
@@ -13,13 +12,13 @@ namespace DownloadService.DataAccess
 {
     public class MySqlDataTarget : IDataTarget
     {
-        public readonly ILoggerService _logger;
+        private readonly ILoggerService _logger;
         private readonly IOptionsMonitor<MySqlConnectionConfig> _connectionConfig;
         private readonly IValidator<MySqlConnectionConfig> _mySqlConnectionConfigValidator;
-        private const string GetLatAndLon = "SELECT LON, LAT FROM @tableName  WHERE MCC = @MCC AND MNC=@MNC AND LAC = @LAC AND CID = @CID;";
-        private const string GetLbs = "SELECT MCC, MNC, LAC, CID FROM @tableName WHERE LON = @LON AND LAT = @LAT";
+        private const string GetLatAndLon = "SELECT lng, lat FROM @tableName  WHERE mcc = @MCC AND mnc = @MNC AND lac = @LAC AND cid = @CID;";
+        private const string GetLbs = "SELECT mcc, mnc, lac, cid FROM @tableName WHERE lng = @LON AND lat = @LAT";
 
-        private const string Query = "INSERT INTO towerdata(Act,MCC,MNC,LAC,CID,LON,LAT) VALUES ";
+        private const string Query = "INSERT INTO towerdata(radio,mcc,mnc,lac,cid,lng,lat) VALUES ";
         
         public MySqlDataTarget(ILoggerService logger,IOptionsMonitor<MySqlConnectionConfig> connectionConfig, IValidator<MySqlConnectionConfig> mySqlConnectionConfigValidator)
         {
@@ -43,16 +42,17 @@ namespace DownloadService.DataAccess
             {
                 var delete = new MySqlCommand("DELETE FROM towerdata", connection);
                 delete.ExecuteNonQuery();
+                _logger.Log(LogLevel.Information, "the number of records in the database after clearing: " + (long)commandCheckState.ExecuteScalar());
                 var sb = new StringBuilder(500);
                 sb.Append(Query);
                 foreach (var cellTower in cellInfoList)
                 {
-                    sb.Append("('").Append(cellTower.Act).Append("'").Append(",");
+                    sb.Append("('").Append(cellTower.Radio).Append("'").Append(",");
                     sb.Append(cellTower.Mcc).Append(",");
                     sb.Append(cellTower.Mnc).Append(",");
                     sb.Append(cellTower.Lac).Append(",");
                     sb.Append(cellTower.Cid).Append(",");
-                    sb.Append(cellTower.Lon.ToString(CultureInfo.InvariantCulture)).Append(",");
+                    sb.Append(cellTower.Lng.ToString(CultureInfo.InvariantCulture)).Append(",");
                     sb.Append(cellTower.Lat.ToString(CultureInfo.InvariantCulture)).Append("),");
                     count++;
                     if (count % batchSize == 0)
@@ -92,7 +92,7 @@ namespace DownloadService.DataAccess
 
             if (double.TryParse(reader["LON"].ToString(), out var lon))
             {
-                info.Lon = lon;
+                info.Lng = lon;
             }
 
             if (double.TryParse(reader["LAT"].ToString(), out var lan))
@@ -111,7 +111,7 @@ namespace DownloadService.DataAccess
 
             using var command = new MySqlCommand(GetLbs, connection);
             command.Parameters.AddWithValue("@tableName", _connectionConfig.CurrentValue.TableName);
-            command.Parameters.AddWithValue("@LON", cellTower.Lon);
+            command.Parameters.AddWithValue("@LON", cellTower.Lng);
             command.Parameters.AddWithValue("@LAT", cellTower.Lat);
 
             using var reader = command.ExecuteReader();

@@ -32,7 +32,7 @@ namespace DownloadService
                 var resultValidation = await _timerConfigValidator.ValidateAsync(_timerConfig.CurrentValue, stoppingToken);
                 if (resultValidation.IsValid)
                 {
-                    using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10000));
+                    using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(20000));
                     //using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_timerConfig.CurrentValue.TimeInterval));
                     while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
                     {

@@ -31,7 +31,7 @@ namespace DownloadService.DataAccess
             using var writer = new StreamWriter(_fileConfig.CurrentValue.OutputFilePath ?? throw new InvalidOperationException(), false);
             foreach (var cellInfo in cellInfoList)
             {
-                writer.Write(cellInfo.Act);
+                writer.Write(cellInfo.Radio);
                 writer.Write(',');
                 writer.Write(cellInfo.Mcc);
                 writer.Write(',');
@@ -41,7 +41,7 @@ namespace DownloadService.DataAccess
                 writer.Write(',');
                 writer.Write(cellInfo.Cid);
                 writer.Write(',');
-                writer.Write(cellInfo.Lon.ToString(CultureInfo.InvariantCulture));
+                writer.Write(cellInfo.Radio.ToString(CultureInfo.InvariantCulture));
                 writer.Write(',');
                 writer.WriteLine(cellInfo.Lat.ToString(CultureInfo.InvariantCulture));
             }

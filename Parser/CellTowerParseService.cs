@@ -40,7 +40,7 @@ namespace DownloadService.Parser
                         if ((sb.Length == 4 && sb.ToString() == "GSM,") || (sb.Length == 5 && sb.ToString() == "UMTS,"))
                         {
                             sb.Remove(sb.Length - 1, 1);
-                            info.Act = sb.ToString();
+                            info.Radio = sb.ToString();
                             return true;
                         }
                         if (sb.Length == 4 && sb.ToString() == "LTE,")
@@ -143,9 +143,9 @@ namespace DownloadService.Parser
                                 {
                                     case 1:
                                         if (double.TryParse(sb.ToString(), NumberStyles.Any,
-                                                CultureInfo.InvariantCulture, out var lon))
+                                                CultureInfo.InvariantCulture, out var lng))
                                         {
-                                            info.Lon = lon;
+                                            info.Lng = lng;
                                         }
                                         else throw new FormatException();
 

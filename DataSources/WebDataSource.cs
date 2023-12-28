@@ -33,7 +33,6 @@ namespace DownloadService.DataSources
             {
                 _logger.Log(LogLevel.Error,$"HTTP request failed with status code: {response.StatusCode}");
             }
-
             await using var gzipStream = await response.Content.ReadAsStreamAsync();
             await using var decompressionStream = new GZipStream(gzipStream, CompressionMode.Decompress);
             var memoryStream = new MemoryStream();

@@ -1,56 +1,30 @@
-22.12.2023 15:54:27|Information|Starting the parsing process 
-22.12.2023 15:54:28|Information|Success download and parse file
-22.12.2023 15:54:37|Information|Starting the parsing process 
-22.12.2023 15:54:37|Information|Success download and parse file
-22.12.2023 15:54:47|Information|Starting the parsing process 
-22.12.2023 15:54:47|Information|Success download and parse file
-22.12.2023 15:54:57|Information|Starting the parsing process 
-22.12.2023 15:54:57|Information|Success download and parse file
-22.12.2023 16:17:39|Information|Starting the parsing process 
-22.12.2023 16:17:39|Information|Successful retrieval of data from the archive
-22.12.2023 16:17:39|Information|Successful writing of data to a file
-22.12.2023 16:17:39|Information|Success download and parse file
-22.12.2023 16:17:49|Information|Starting the parsing process 
-22.12.2023 16:17:49|Information|Successful retrieval of data from the archive
-22.12.2023 16:17:49|Information|Successful writing of data to a file
-22.12.2023 16:17:49|Information|Success download and parse file
-22.12.2023 16:17:59|Information|Starting the parsing process 
-22.12.2023 16:17:59|Information|Successful retrieval of data from the archive
-22.12.2023 16:17:59|Information|Successful writing of data to a file
-22.12.2023 16:17:59|Information|Success download and parse file
-22.12.2023 16:18:09|Information|Starting the parsing process 
-22.12.2023 16:18:09|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:09|Information|Successful writing of data to a file
-22.12.2023 16:18:09|Information|Success download and parse file
-22.12.2023 16:18:19|Information|Starting the parsing process 
-22.12.2023 16:18:19|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:19|Information|Successful writing of data to a file
-22.12.2023 16:18:19|Information|Success download and parse file
-22.12.2023 16:18:29|Information|Starting the parsing process 
-22.12.2023 16:18:29|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:29|Information|Successful writing of data to a file
-22.12.2023 16:18:29|Information|Success download and parse file
-22.12.2023 16:18:39|Information|Starting the parsing process 
-22.12.2023 16:18:39|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:39|Information|Successful writing of data to a file
-22.12.2023 16:18:39|Information|Success download and parse file
-22.12.2023 16:18:49|Information|Starting the parsing process 
-22.12.2023 16:18:49|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:49|Information|Successful writing of data to a file
-22.12.2023 16:18:49|Information|Success download and parse file
-22.12.2023 16:18:59|Information|Starting the parsing process 
-22.12.2023 16:18:59|Information|Successful retrieval of data from the archive
-22.12.2023 16:18:59|Information|Successful writing of data to a file
-22.12.2023 16:18:59|Information|Success download and parse file
-22.12.2023 16:19:09|Information|Starting the parsing process 
-22.12.2023 16:19:09|Information|Successful retrieval of data from the archive
-22.12.2023 16:19:09|Information|Successful writing of data to a file
-22.12.2023 16:19:09|Information|Success download and parse file
-22.12.2023 16:19:19|Information|Starting the parsing process 
-22.12.2023 16:19:19|Information|Successful retrieval of data from the archive
-22.12.2023 16:19:19|Information|Successful writing of data to a file
-22.12.2023 16:19:19|Information|Success download and parse file
-22.12.2023 16:19:29|Information|Starting the parsing process 
-22.12.2023 16:19:29|Information|Successful retrieval of data from the archive
-22.12.2023 16:19:29|Information|Successful writing of data to a file
-22.12.2023 16:19:29|Information|Success download and parse file
+22.12.2023 16:45:27|Information|Starting the parsing process 
+22.12.2023 16:45:34|Information|Successfully downloading the archive and retrieving its contents
+22.12.2023 16:45:35|Information|number of records in the database at the beginning: 123080
+22.12.2023 16:45:38|Information|the number of records in the database after clearing: 0
+22.12.2023 16:45:56|Information|number of records in the database at the end: 123080
+22.12.2023 16:45:56|Information|Success download and parse file
+22.12.2023 16:48:47|Information|Starting the parsing process 
+22.12.2023 16:48:54|Information|Successfully downloading the archive and retrieving its contents
+22.12.2023 16:48:54|Information|number of records in the database at the beginning: 123080
+22.12.2023 16:48:57|Information|the number of records in the database after clearing: 0
+22.12.2023 16:49:16|Information|number of records in the database at the end: 123080
+22.12.2023 16:49:16|Information|Success download and parse file
+22.12.2023 16:52:07|Information|Starting the parsing process 
+22.12.2023 16:52:14|Information|Successfully downloading the archive and retrieving its contents
+22.12.2023 16:52:14|Information|number of records in the database at the beginning: 123080
+22.12.2023 16:52:16|Information|the number of records in the database after clearing: 0
+22.12.2023 16:52:34|Information|number of records in the database at the end: 123080
+22.12.2023 16:52:34|Information|Success download and parse file
+28.12.2023 16:14:53|Information|Starting the parsing process 
+28.12.2023 16:14:55|Error|The SSL connection could not be established, see inner exception.
+28.12.2023 16:28:02|Information|Starting the parsing process 
+28.12.2023 16:28:04|Error|The SSL connection could not be established, see inner exception.
+28.12.2023 16:42:53|Information|Starting the parsing process 
+28.12.2023 16:42:53|Information|Successful retrieval of data from the archive
+28.12.2023 16:42:54|Information|Successful writing of data to a file
+28.12.2023 16:42:54|Information|Success download and parse file
+28.12.2023 16:43:13|Information|Starting the parsing process 
+28.12.2023 16:43:13|Information|Successful retrieval of data from the archive
+28.12.2023 16:43:14|Information|Successful writing of data to a file
+28.12.2023 16:43:14|Information|Success download and parse file
